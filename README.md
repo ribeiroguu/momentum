@@ -1,6 +1,12 @@
-# Welcome to your Expo app 👋
+# Momentum
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## Introdução
+
+O aplicativo “Momentum” propõe-se como muito mais do que uma simples ferramenta de anotações, trata-se de uma solução inovadora para transformar a experiência de registrar ideias, organizar tarefas e estruturar pensamentos de modo interativo e fluido. Com design intuitivo e funcionalidades modernas, “Momentum” oferece uma abordagem que transcende o convencional, tornando cada anotação um momento de autoconhecimento e clareza.
+
+O principal objetivo deste projeto é reinventar o ato de fazer anotações, tornando-o mais envolvente, dinâmico e adaptado ao dia a dia contemporâneo. Buscando desfazer a imagem tradicional e estática do bloco de notas, “Momentum” incorpora recursos que promovem interatividade e praticidade, convidando o usuário a construir seus registros de forma personalizada e significativa.
+
+A justificativa para o desenvolvimento do “Momentum” está fundamentada na necessidade crescente de ferramentas digitais que acompanhem o ritmo acelerado da vida moderna, aliando facilidade de uso a um visual agradável. Ao investir em inovação, funcionalidade e usabilidade, o aplicativo se diferencia ao proporcionar não apenas organização, mas também inspiração, o que torna o simples ato de anotar em um verdadeiro momento de transformação pessoal.
 
 ## Get started
 

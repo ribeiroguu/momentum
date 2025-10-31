@@ -1,14 +1,11 @@
 import { View, Text } from "react-native";
+import { typography } from "@/styles/global"
 
 export default function Index() {
   return (
     <View>
       <Text
-        style={{
-          color: "white",
-          fontSize: 24,
-          fontFamily: "Inter-Regular"
-        }}
+        style={typography.context}
       >
         Olá mundo!
       </Text>

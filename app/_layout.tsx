@@ -1,5 +1,35 @@
-import { Stack } from "expo-router";
+import { Stack } from 'expo-router';
+import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
+
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  return <Stack />;
+  const [fontsLoaded] = useFonts({
+    "Inter-Regular": require("@/assets/fonts/Inter/Inter_18pt-Regular.ttf"),
+    "Inter-Bold": require("@/assets/fonts/Inter/Inter_18pt-Bold.ttf"),
+    "Inter-Black": require("@/assets/fonts/Inter/Inter_18pt-Black.ttf"),
+  });
+
+  useEffect(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: {
+          backgroundColor: "#282828",
+        },
+      }}
+    />
+  );
 }

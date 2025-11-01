@@ -7,7 +7,7 @@ export const colors = {
   background: "#282828",
   text: "#fff",
   error: "#D90000",
-  white: "D9D9D9",
+  white: "#D9D9D9",
 };
 
 export const spacing = {
@@ -20,7 +20,7 @@ export const typography = StyleSheet.create({
   title: {
     color: colors.text,
     fontSize: 64,
-    fontFamily: "Inter-Bold",
+    fontFamily: "Inter-Regular",
   },
   subtitle: {
     color: colors.text,

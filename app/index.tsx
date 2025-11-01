@@ -5,14 +5,15 @@ import { Link } from "expo-router";
 export default function Index() {
   return (
     <View style={styles.container}>
-      <Text style={typography.title}>Seja
-      criativo
-      com o seu
-      Dia a Dia</Text>
+      <Text style={[typography.title, { fontFamily: "Inter-Bold" }]}>
+        Seja
+        criativo
+        com o seu
+        Dia a Dia
+      </Text>
 
-      <Link asChild href="/home">
+      <Link asChild href="/notes">
         <TouchableOpacity
-          onPress={() => console.log("Button pressed")}
           style={styles.button}
         >
           <Text style={[typography.letter, {fontFamily: "Inter-Bold"}]}>Começar agora</Text>
@@ -37,5 +38,6 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
     marginBottom: spacing.medium,
+    marginTop: 15,
   },
 });

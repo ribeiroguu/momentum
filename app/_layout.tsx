@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { colors } from "@/styles/global"
 
 SplashScreen.preventAutoHideAsync();
 
@@ -27,7 +28,7 @@ export default function RootLayout() {
       screenOptions={{
         headerShown: false,
         contentStyle: {
-          backgroundColor: "#282828",
+          backgroundColor: colors.background,
         },
       }}
     />

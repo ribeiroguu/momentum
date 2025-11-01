@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet } from "react-native";
-import { colors, spacing, typography } from "@/styles/global";
+import { colors, typography } from "@/styles/global";
 
 interface CardProps {
   title: string;
@@ -9,8 +9,12 @@ interface CardProps {
 export const Card = ({ title, text }: CardProps) => {
   return (
     <View style={styles.container}>
-      <Text style={[typography.subtitle, { marginBottom: spacing.small }]}>{title}</Text>
-      <Text style={typography.context}>{text}</Text>
+      <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
+        {title}
+      </Text>
+      <Text style={styles.text} numberOfLines={8} ellipsizeMode="tail">
+        {text}
+      </Text>
     </View>
   );
 };
@@ -19,6 +23,21 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.white,
     borderRadius: 25,
-    padding: spacing.medium,
+    padding: 15,
+    flex: 1, // Ocupa metade do espaço disponível
+    height: 260,
+    overflow: 'hidden',
+  },
+  title: {
+    ...typography.subtitle,
+    color: "#000",
+    marginBottom: 5,
+    fontFamily: "Inter-Bold",
+  },
+  text: {
+    ...typography.context,
+    color: "#000",
+    lineHeight: 20,
+    flexShrink: 1,
   },
 });

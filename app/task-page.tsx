@@ -1,10 +1,10 @@
-import { View, Text } from "react-native";
+import { Text, View } from "react-native";
 
 export default function TaskPage() {
   return (
     <View>
       <Text>
-        Task Page
+        Task 
       </Text>
     </View>
   );

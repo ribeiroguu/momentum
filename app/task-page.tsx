@@ -1,74 +1,100 @@
-import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Plus, ArrowLeft } from 'lucide-react-native'
+import React, { useState, useCallback, memo, FC } from 'react';
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  ListRenderItem,
+} from 'react-native';
 
-export default function TaskPage() {
-  // Começa sem nenhuma tarefa
-  const [tasks, setTasks] = useState([]);
+type Task = {
+  id: number;
+  text: string;
+  done: boolean;
+};
 
-  // Alterna o estado da tarefa (feito / não feito)
-  const toggleTask = (id) => {
-    setTasks(tasks.map(task => 
-      task.id === id ? { ...task, done: !task.done } : task
-    ));
-  };
+interface TaskItemProps {
+  task: Task;
+  onToggle: (id: number) => void;
+}
 
-  // Adiciona uma nova tarefa
-  const addTask = () => {
-    const newId = tasks.length + 1;
-    const newTask = { id: newId, text: `Tarefa ${String(newId).padStart(2, '0')}`, done: false };
-    setTasks([...tasks, newTask]);
-  };
+const TaskItem: FC<TaskItemProps> = memo(function TaskItem({ task, onToggle }) {
+  console.log('Renderizando TaskItem:', task.id);
+
+  return (
+    <TouchableOpacity
+      style={styles.taskButton}
+      onPress={() => onToggle(task.id)}
+    >
+      <View style={[styles.circle, task.done && styles.circleDone]}>
+        {task.done && <View style={styles.innerCircle} />}
+      </View>
+      <Text style={[styles.taskText, task.done && styles.taskTextDone]}>
+        {task.text}
+      </Text>
+    </TouchableOpacity>
+  );
+});
+
+export function TaskPage() {
+  const [tasks, setTasks] = useState<Task[]>([]);
+
+  const toggleTask = useCallback((id: number) => {
+    setTasks(prevTasks =>
+      prevTasks.map(task =>
+        task.id === id ? { ...task, done: !task.done } : task
+      )
+    );
+  }, []);
+
+  const addTask = useCallback(() => {
+    setTasks(prevTasks => {
+      const newId = Date.now();
+      const newTask: Task = {
+        id: newId,
+        text: `Tarefa #${prevTasks.length + 1}`,
+        done: false
+      };
+      return [...prevTasks, newTask];
+    });
+  }, []);
+
+  const renderItem: ListRenderItem<Task> = useCallback(({ item }) => (
+    <TaskItem task={item} onToggle={toggleTask} />
+  ), [toggleTask]);
 
   return (
     <View style={styles.container}>
-      {/* Cabeçalho com seta */}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton}>
-          <Ionicons name="arrow-back" size={26} color="#FFFFFF" />
+          <ArrowLeft size={26} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
 
-      {/* Título principal */}
       <Text style={styles.title}>Título da tarefa</Text>
 
-      {/* Lista de tarefas com scroll */}
-      <ScrollView style={styles.taskContainer}>
-        {tasks.length === 0 ? (
+      <FlatList
+        data={tasks}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id.toString()}
+        style={styles.taskContainer}
+        ListEmptyComponent={
           <Text style={styles.emptyText}>Nenhuma tarefa ainda :c</Text>
-        ) : (
-          tasks.map(task => (
-            <TouchableOpacity
-              key={task.id}
-              style={styles.taskButton}
-              onPress={() => toggleTask(task.id)}
-            >
-              <View style={[styles.circle, task.done && styles.circleDone]}>
-                {task.done && <View style={styles.innerCircle} />}
-              </View>
-              <Text
-                style={[
-                  styles.taskText,
-                  task.done && styles.taskTextDone
-                ]}
-              >
-                {task.text}
-              </Text>
-            </TouchableOpacity>
-          ))
-        )}
-      </ScrollView>
+        }
+        contentContainerStyle={tasks.length === 0 ? { flex: 1, justifyContent: 'center' } : {}}
+      />
 
-      {/* Botão flutuante de adicionar */}
       <TouchableOpacity style={styles.addButton} onPress={addTask}>
-        <Ionicons name="add" size={36} color="#FFFFFF" />
+        <Plus size={36} color="#FFFFFF" />
       </TouchableOpacity>
 
-      <StatusBar style="auto" />
+      <StatusBar style="light" />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -153,6 +179,5 @@ const styles = StyleSheet.create({
     color: '#888',
     fontSize: 16,
     textAlign: 'center',
-    marginTop: 50,
   },
 });

@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: 25,
     padding: 15,
-    flex: 1, // Ocupa metade do espaço disponível
+    flex: 1,
     height: 260,
     overflow: 'hidden',
   },

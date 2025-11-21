@@ -4,6 +4,8 @@ import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { colors } from "@/styles/global";
+import { NotesProvider } from "@/contexts/NotesContext";
+import { TasksProvider } from "@/contexts/TasksContext";
 
 SplashScreen.preventAutoHideAsync().catch(() => {
 });
@@ -51,18 +53,22 @@ export default function RootLayout() {
   }
 
   return (
-    <View
-      style={{ flex: 1, backgroundColor: colors.background }}
-      onLayout={onLayoutRootView}
-    >
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: colors.background },
-        }}
-      >
-        {stackScreens}
-      </Stack>
-    </View>
+    <NotesProvider>
+      <TasksProvider>
+        <View
+          style={{ flex: 1, backgroundColor: colors.background }}
+          onLayout={onLayoutRootView}
+        >
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: colors.background },
+            }}
+          >
+            {stackScreens}
+          </Stack>
+        </View>
+      </TasksProvider>
+    </NotesProvider>
   );
 }

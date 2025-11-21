@@ -1,21 +1,27 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { colors, typography } from "@/styles/global";
 
 interface CardProps {
   title: string;
   text: string;
+  onPress?: () => void;
 }
 
-export const Card = ({ title, text }: CardProps) => {
+export const Card = ({ title, text, onPress }: CardProps) => {
+  const Container = onPress ? TouchableOpacity : View;
+  
   return (
-    <View style={styles.container}>
+    <Container 
+      style={styles.container}
+      {...(onPress ? { onPress, activeOpacity: 0.7 } : {})}
+    >
       <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
         {title}
       </Text>
       <Text style={styles.text} numberOfLines={8} ellipsizeMode="tail">
         {text}
       </Text>
-    </View>
+    </Container>
   );
 };
 

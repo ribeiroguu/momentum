@@ -1,74 +1,151 @@
-import React, { useState } from 'react'
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet } from 'react-native'
+import React, { useState, useEffect } from 'react';
+import { View, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { ArrowLeft, Trash2, Check } from 'lucide-react-native';
+import { useNotes } from '@/hooks/useNotes';
+import { colors, typography } from '@/styles/global';
 
 export default function NotePage() {
-  const [editando, setEditando] = useState(false)
-  const [texto, setTexto] = useState('...')
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { getNote, updateNote, deleteNote } = useNotes();
+  
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    if (id) {
+      const note = getNote(id);
+      if (note) {
+        setTitle(note.title);
+        setContent(note.content);
+      }
+    }
+  }, [id, getNote]);
+
+  const handleSave = async () => {
+    if (id) {
+      await updateNote(id, title || 'Nota sem título', content);
+      setIsEditing(false);
+    }
+  };
+
+  const handleDelete = () => {
+    Alert.alert(
+      'Excluir nota',
+      'Tem certeza que deseja excluir esta nota?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Excluir',
+          style: 'destructive',
+          onPress: async () => {
+            if (id) {
+              await deleteNote(id);
+              router.back();
+            }
+          },
+        },
+      ]
+    );
+  };
 
   return (
-    <View style={estilos.container}>
-      <TouchableOpacity onPress={() => alert('ir para outra tela')}>
-        <Text style={estilos.seta}>←</Text>
-      </TouchableOpacity>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <ArrowLeft size={24} color={colors.text} />
+        </TouchableOpacity>
+        
+        <View style={styles.headerActions}>
+          <TouchableOpacity onPress={handleDelete} style={styles.iconButton}>
+            <Trash2 size={24} color={colors.error} />
+          </TouchableOpacity>
+          
+          {isEditing && (
+            <TouchableOpacity onPress={handleSave} style={styles.iconButton}>
+              <Check size={24} color={colors.primary} />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
 
-      <Text style={estilos.titulo}>Título da nota</Text>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <TextInput
+          style={styles.titleInput}
+          value={title}
+          onChangeText={setTitle}
+          placeholder="Título da nota"
+          placeholderTextColor={colors.secondary}
+          onFocus={() => setIsEditing(true)}
+        />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-        {editando ? (
-          <TextInput style={estilos.textoEditavel} multiline value={texto} onChangeText={setTexto} />
-        ) : (
-          <Text style={estilos.texto}>{texto}</Text>
-        )}
+        <TextInput
+          style={styles.contentInput}
+          value={content}
+          onChangeText={setContent}
+          placeholder="Comece a escrever..."
+          placeholderTextColor={colors.secondary}
+          multiline
+          textAlignVertical="top"
+          onFocus={() => setIsEditing(true)}
+        />
       </ScrollView>
-
-      <TouchableOpacity style={estilos.botao} onPress={() => setEditando(!editando)}>
-        <Text style={estilos.icone}>+</Text>
-      </TouchableOpacity>
     </View>
-  )
+  );
 }
 
-const estilos = StyleSheet.create({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1c1c1c',
-    padding: 20,
+    backgroundColor: colors.background,
+    paddingHorizontal: 20,
+    paddingTop: 50,
   },
-  seta: {
-    color: 'white',
-    fontSize: 28,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 20,
   },
-  titulo: {
-    color: 'white',
-    fontSize: 28,
-    fontWeight: 'bold',
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.shadow,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.shadow,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scrollContent: {
+    paddingBottom: 40,
+  },
+  titleInput: {
+    ...typography.subtitle,
+    color: colors.text,
+    fontFamily: 'Inter-Bold',
     marginBottom: 20,
+    paddingVertical: 10,
   },
-  texto: {
-    color: '#ccc',
-    fontSize: 16,
-    lineHeight: 22,
+  contentInput: {
+    ...typography.context,
+    color: colors.text,
+    fontFamily: 'Inter-Regular',
+    lineHeight: 24,
+    minHeight: 400,
   },
-  textoEditavel: {
-    color: '#ccc',
-    fontSize: 16,
-    lineHeight: 22,
-    backgroundColor: '#222',
-    borderRadius: 8,
-    padding: 10,
-    textAlignVertical: 'top',
-  },
-  botao: {
-    backgroundColor: '#333',
-    padding: 15,
-    borderRadius: 50,
-    position: 'absolute',
-    bottom: 30,
-    right: 30,
-  },
-  icone: {
-    color: 'white',
-    fontSize: 20,
-  },
-})
+});

@@ -1,6 +1,6 @@
+import React, { useState, useEffect, useCallback, memo, FC } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Plus, ArrowLeft } from 'lucide-react-native'
-import React, { useState, useCallback, memo, FC } from 'react';
+import { Plus, ArrowLeft, Trash2, X } from 'lucide-react-native';
 import {
   FlatList,
   StyleSheet,
@@ -8,103 +8,202 @@ import {
   TouchableOpacity,
   View,
   ListRenderItem,
+  TextInput,
+  Alert,
 } from 'react-native';
-
-type Task = {
-  id: number;
-  text: string;
-  done: boolean;
-};
+import { router, useLocalSearchParams } from 'expo-router';
+import { useTasks } from '@/hooks/useTasks';
+import { colors, typography } from '@/styles/global';
+import { TaskItem as TaskItemType } from '@/types';
 
 interface TaskItemProps {
-  task: Task;
-  onToggle: (id: number) => void;
+  item: TaskItemType;
+  onToggle: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
-const TaskItem: FC<TaskItemProps> = memo(function TaskItem({ task, onToggle }) {
-  console.log('Renderizando TaskItem:', task.id);
-
+const TaskItem: FC<TaskItemProps> = memo(function TaskItem({ item, onToggle, onDelete }) {
   return (
-    <TouchableOpacity
-      style={styles.taskButton}
-      onPress={() => onToggle(task.id)}
-    >
-      <View style={[styles.circle, task.done && styles.circleDone]}>
-        {task.done && <View style={styles.innerCircle} />}
-      </View>
-      <Text style={[styles.taskText, task.done && styles.taskTextDone]}>
-        {task.text}
-      </Text>
-    </TouchableOpacity>
+    <View style={styles.taskButton}>
+      <TouchableOpacity
+        style={styles.taskContent}
+        onPress={() => onToggle(item.id)}
+      >
+        <View style={[styles.circle, item.completed && styles.circleDone]}>
+          {item.completed && <View style={styles.innerCircle} />}
+        </View>
+        <Text style={[styles.taskText, item.completed && styles.taskTextDone]}>
+          {item.text}
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => onDelete(item.id)} style={styles.deleteButton}>
+        <X size={20} color={colors.secondary} />
+      </TouchableOpacity>
+    </View>
   );
 });
 
-export function TaskPage() {
-  const [tasks, setTasks] = useState<Task[]>([]);
+export default function TaskPage() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { getTask, updateTask, deleteTask, addTaskItem, toggleTaskItem, deleteTaskItem } = useTasks();
+  
+  const [task, setTask] = useState<ReturnType<typeof getTask>>(undefined);
+  const [title, setTitle] = useState('');
+  const [newItemText, setNewItemText] = useState('');
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
 
-  const toggleTask = useCallback((id: number) => {
-    setTasks(prevTasks =>
-      prevTasks.map(task =>
-        task.id === id ? { ...task, done: !task.done } : task
-      )
+  useEffect(() => {
+    if (id) {
+      const currentTask = getTask(id);
+      if (currentTask) {
+        setTask(currentTask);
+        setTitle(currentTask.title);
+      }
+    }
+  }, [id, getTask]);
+
+  // Atualizar task quando houver mudanças
+  useEffect(() => {
+    if (id) {
+      const currentTask = getTask(id);
+      setTask(currentTask);
+    }
+  }, [id, getTask]);
+
+  const handleSaveTitle = async () => {
+    if (id && task) {
+      await updateTask(id, title || 'Tarefa sem título', task.items);
+      setIsEditingTitle(false);
+    }
+  };
+
+  const handleAddItem = async () => {
+    if (id && newItemText.trim()) {
+      await addTaskItem(id, newItemText.trim());
+      setNewItemText('');
+      const updatedTask = getTask(id);
+      setTask(updatedTask);
+    }
+  };
+
+  const handleToggleItem = useCallback(async (itemId: string) => {
+    if (id) {
+      await toggleTaskItem(id, itemId);
+      const updatedTask = getTask(id);
+      setTask(updatedTask);
+    }
+  }, [id, toggleTaskItem, getTask]);
+
+  const handleDeleteItem = useCallback(async (itemId: string) => {
+    if (id) {
+      await deleteTaskItem(id, itemId);
+      const updatedTask = getTask(id);
+      setTask(updatedTask);
+    }
+  }, [id, deleteTaskItem, getTask]);
+
+  const handleDeleteTask = () => {
+    Alert.alert(
+      'Excluir tarefa',
+      'Tem certeza que deseja excluir esta tarefa?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Excluir',
+          style: 'destructive',
+          onPress: async () => {
+            if (id) {
+              await deleteTask(id);
+              router.back();
+            }
+          },
+        },
+      ]
     );
-  }, []);
+  };
 
-  const addTask = useCallback(() => {
-    setTasks(prevTasks => {
-      const newId = Date.now();
-      const newTask: Task = {
-        id: newId,
-        text: `Tarefa #${prevTasks.length + 1}`,
-        done: false
-      };
-      return [...prevTasks, newTask];
-    });
-  }, []);
+  const renderItem: ListRenderItem<TaskItemType> = useCallback(({ item }) => (
+    <TaskItem item={item} onToggle={handleToggleItem} onDelete={handleDeleteItem} />
+  ), [handleToggleItem, handleDeleteItem]);
 
-  const renderItem: ListRenderItem<Task> = useCallback(({ item }) => (
-    <TaskItem task={item} onToggle={toggleTask} />
-  ), [toggleTask]);
+  if (!task) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.emptyText}>Tarefa não encontrada</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton}>
-          <ArrowLeft size={26} color="#FFFFFF" />
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <ArrowLeft size={26} color={colors.text} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleDeleteTask} style={styles.backButton}>
+          <Trash2 size={24} color={colors.error} />
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.title}>Título da tarefa</Text>
+      {isEditingTitle ? (
+        <View style={styles.titleEditContainer}>
+          <TextInput
+            style={styles.titleInput}
+            value={title}
+            onChangeText={setTitle}
+            onBlur={handleSaveTitle}
+            autoFocus
+            placeholder="Título da tarefa"
+            placeholderTextColor={colors.secondary}
+          />
+        </View>
+      ) : (
+        <TouchableOpacity onPress={() => setIsEditingTitle(true)}>
+          <Text style={styles.title}>{title}</Text>
+        </TouchableOpacity>
+      )}
+
+      <View style={styles.addItemContainer}>
+        <TextInput
+          style={styles.addItemInput}
+          value={newItemText}
+          onChangeText={setNewItemText}
+          placeholder="Nova tarefa..."
+          placeholderTextColor={colors.secondary}
+          onSubmitEditing={handleAddItem}
+          returnKeyType="done"
+        />
+        <TouchableOpacity onPress={handleAddItem} style={styles.addItemButton}>
+          <Plus size={24} color={colors.text} />
+        </TouchableOpacity>
+      </View>
 
       <FlatList
-        data={tasks}
+        data={task.items}
         renderItem={renderItem}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => item.id}
         style={styles.taskContainer}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>Nenhuma tarefa ainda :c</Text>
+          <Text style={styles.emptyText}>Nenhum item ainda</Text>
         }
-        contentContainerStyle={tasks.length === 0 ? { flex: 1, justifyContent: 'center' } : {}}
+        contentContainerStyle={task.items.length === 0 ? { flex: 1, justifyContent: 'center' } : { paddingBottom: 20 }}
       />
-
-      <TouchableOpacity style={styles.addButton} onPress={addTask}>
-        <Plus size={36} color="#FFFFFF" />
-      </TouchableOpacity>
 
       <StatusBar style="light" />
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1E1E1E',
+    backgroundColor: colors.background,
     paddingHorizontal: 20,
     paddingTop: 50,
   },
   header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 10,
   },
@@ -112,17 +211,53 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#3C3C3C',
+    backgroundColor: colors.shadow,
     alignItems: 'center',
     justifyContent: 'center',
   },
   title: {
-    fontSize: 40,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-    marginTop: 40,
-    marginBottom: 30,
+    ...typography.subtitle,
+    color: colors.text,
+    marginTop: 20,
+    marginBottom: 20,
     lineHeight: 45,
+    fontFamily: 'Inter-Bold',
+  },
+  titleEditContainer: {
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  titleInput: {
+    ...typography.subtitle,
+    color: colors.text,
+    fontFamily: 'Inter-Bold',
+    paddingVertical: 10,
+    borderBottomWidth: 2,
+    borderBottomColor: colors.primary,
+  },
+  addItemContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.shadow,
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    marginBottom: 20,
+    gap: 10,
+  },
+  addItemInput: {
+    flex: 1,
+    ...typography.context,
+    color: colors.text,
+    fontFamily: 'Inter-Regular',
+    paddingVertical: 12,
+  },
+  addItemButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   taskContainer: {
     flex: 1,
@@ -130,54 +265,54 @@ const styles = StyleSheet.create({
   taskButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#3C3C3C',
+    justifyContent: 'space-between',
+    backgroundColor: colors.shadow,
     borderRadius: 20,
     paddingVertical: 12,
     paddingHorizontal: 15,
     marginBottom: 12,
+  },
+  taskContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   circle: {
     width: 22,
     height: 22,
     borderRadius: 11,
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: colors.text,
     marginRight: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
   circleDone: {
-    borderColor: '#8F8F8F',
+    borderColor: colors.secondary,
   },
   innerCircle: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#8F8F8F',
+    backgroundColor: colors.secondary,
   },
   taskText: {
-    color: '#FFFFFF',
-    fontSize: 18,
+    ...typography.context,
+    color: colors.text,
+    fontFamily: 'Inter-Regular',
+    flex: 1,
   },
   taskTextDone: {
-    color: '#8F8F8F',
+    color: colors.secondary,
     textDecorationLine: 'line-through',
   },
-  addButton: {
-    position: 'absolute',
-    bottom: 30,
-    right: 30,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#3C3C3C',
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 5,
+  deleteButton: {
+    padding: 5,
   },
   emptyText: {
-    color: '#888',
-    fontSize: 16,
+    ...typography.context,
+    color: colors.secondary,
     textAlign: 'center',
+    fontFamily: 'Inter-Regular',
   },
 });

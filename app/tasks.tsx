@@ -1,9 +1,36 @@
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { colors, typography } from "@/styles/global";
-import { Card } from "@/components/card";
-import { Link } from "expo-router"
+import { TaskCard } from "@/components/task-card";
+import { Link, router } from "expo-router";
+import { useTasks } from "@/hooks/useTasks";
+import { Plus } from "lucide-react-native";
 
-export default function Home() {
+export default function TasksScreen() {
+  const { tasks, loading, addTask } = useTasks();
+
+  const handleCreateTask = async () => {
+    const newTask = await addTask("Nova Tarefa");
+    router.push(`/task-page?id=${newTask.id}`);
+  };
+
+  const handleTaskPress = (id: string) => {
+    router.push(`/task-page?id=${id}`);
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  // Organizar tarefas em pares para exibição em grade
+  const taskRows: typeof tasks[] = [];
+  for (let i = 0; i < tasks.length; i += 2) {
+    taskRows.push(tasks.slice(i, i + 2));
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.contentWrapper}>
@@ -14,7 +41,6 @@ export default function Home() {
         <View style={styles.containerSwitch}>
           <Link asChild href="/notes">
             <TouchableOpacity
-              onPress={() => console.log("Notas pressionado")}
               style={styles.switch}
             >
               <Text style={[typography.letter, styles.switchText]}>
@@ -25,7 +51,6 @@ export default function Home() {
 
           <Link asChild href="/tasks">
             <TouchableOpacity
-              onPress={() => console.log("Tarefas pressionado")}
               style={styles.switchCurrent}
             >
               <Text style={[typography.letter, styles.switchTextCurrent]}>
@@ -39,28 +64,30 @@ export default function Home() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.cardsRow}>
-            <Card
-              title="Olá mundo e todos"
-              text="kdawkdhawkdjhawkdhakwhdakwhdakwdhakwdhakwdhawkdhawkdhawkdhawkdhakwdhakwdhakwjhdkawhdakwdh"
-            />
-            <Card
-              title="Segunda nota"
-              text="Conteúdo da segunda nota com informações importantes"
-            />
-          </View>
-
-          <View style={styles.cardsRow}>
-            <Card
-              title="Terceira nota"
-              text="Mais conteúdo interessante aqui"
-            />
-            <Card
-              title="Quarta nota"
-              text="Última nota de exemplo"
-            />
-          </View>
+          {tasks.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Nenhuma tarefa ainda</Text>
+              <Text style={styles.emptySubtext}>Toque no botão + para criar sua primeira tarefa</Text>
+            </View>
+          ) : (
+            taskRows.map((row, rowIndex) => (
+              <View key={rowIndex} style={styles.cardsRow}>
+                {row.map((task) => (
+                  <TaskCard 
+                    key={task.id} 
+                    task={task}
+                    onPress={() => handleTaskPress(task.id)}
+                  />
+                ))}
+                {row.length === 1 && <View style={{ flex: 1 }} />}
+              </View>
+            ))
+          )}
         </ScrollView>
+
+        <TouchableOpacity style={styles.fab} onPress={handleCreateTask}>
+          <Plus size={28} color={colors.text} />
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -72,6 +99,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "100%",
     height: "100%",
+    justifyContent: 'center',
   },
   contentWrapper: {
     width: "90%",
@@ -111,8 +139,9 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   scrollContent: {
-    paddingBottom: 20,
+    paddingBottom: 100,
     gap: 15,
+    flexGrow: 1,
   },
   cardsRow: {
     flexDirection: "row",
@@ -120,5 +149,39 @@ const styles = StyleSheet.create({
     gap: 15,
     width: "100%",
     flexWrap: "nowrap",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  emptyText: {
+    ...typography.subtitle,
+    color: colors.white,
+    fontFamily: "Inter-Bold",
+    marginBottom: 10,
+  },
+  emptySubtext: {
+    ...typography.context,
+    color: colors.white,
+    fontFamily: "Inter-Regular",
+    textAlign: 'center',
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 30,
+    right: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
 });

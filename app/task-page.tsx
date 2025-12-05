@@ -129,7 +129,7 @@ export default function TaskPage() {
   if (!task) {
     return (
       <View style={styles.container}>
-        <Text style={styles.emptyText}>Tarefa não encontrada</Text>
+        <Text style={styles.emptyText}>Nenhuma tarefa encontrada</Text>
       </View>
     );
   }
@@ -184,7 +184,7 @@ export default function TaskPage() {
         keyExtractor={(item) => item.id}
         style={styles.taskContainer}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>Nenhum item ainda</Text>
+          <Text style={styles.emptyText}>Nenhum item adicionado</Text>
         }
         contentContainerStyle={task.items.length === 0 ? { flex: 1, justifyContent: 'center' } : { paddingBottom: 20 }}
       />

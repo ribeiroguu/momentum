@@ -62,7 +62,7 @@ export default function TaskPage() {
     }
   }, [id, getTask]);
 
-  // Atualizar task quando houver mudanças
+
   useEffect(() => {
     if (id) {
       const currentTask = getTask(id);

@@ -104,12 +104,12 @@ export default function TaskPage() {
 
   const handleDeleteTask = () => {
     Alert.alert(
-      'Excluir tarefa',
-      'Tem certeza que deseja excluir esta tarefa?',
+      'Apagar tarefa',
+      'Tem certeza que deseja apagar esta tarefa?',
       [
         { text: 'Cancelar', style: 'cancel' },
         {
-          text: 'Excluir',
+          text: 'Apagar',
           style: 'destructive',
           onPress: async () => {
             if (id) {
